@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+	
+</script>
+<title>test</title>
+</head>
+<body>
+	<script>
+		var linkId;
+		var userId = "ab423";
+
+		
+		//toget the targeted text -----maybe----div inside li
+		var friendValue = $(event.target).text();
+		
+		
+		setInterval(function(){
+			alert("selected");	
+		},1000);
+		
+		/* function doSomething() {
+			alert('This pops up every 5 seconds and is annoying!');
+		}
+
+		setInterval(doSomething, 1000); */
+		
+		
+		/* function getLinkId(friendValue) {
+			return $.ajax({
+				type : "GET",
+				url : "getLinkId",
+				data : "userId=" + userId + "&friendValue=" + friendValue,
+			});
+		}
+
+		$.when(getLinkId(friendValue)).done(function(data) {
+			
+			linkId = data;
+			console.log("data" + data);
+			console.log("link" + linkId);
+
+		});
+		
+		console.log("link" + linkId); */
+	</script>
+
+</body>
+</html>

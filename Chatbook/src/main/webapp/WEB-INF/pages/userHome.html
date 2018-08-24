@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+  <link rel="stylesheet" type="text/css" href="main.css"><!-- //Chatbook/src/main/webapp/pages -->
+<title>Home</title>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+	
+</script>
+</head>
+<body>
+	<div id="leftPanel">
+		<div id="userPanel">
+			<span id="userId"></span>
+			<button class="nav" id="logout">Logout</button>
+			
+		</div>
+		<div id="search">
+			<input type="text" id="inputSearch" placeholder="search">
+		</div>
+		<br>
+		<div id="searchResultsDiv"><h3>Search Results :</h3><ul name="searchResults" id="searchResults"></ul></div>
+		 
+	 	<div id="friendsDiv"><h3>Contacts:</h3><ul name="friends" id="friends"></ul></div> 
+	</div>
+	<div id="body">
+		<div id="upperBodyPanel">
+			<div id="friendId"  >
+			</div>
+			<div id="friendActivity">
+			</div>
+			<button id="addUserButton">Add</button>
+		</div>
+		<br>
+		<hr>
+		<div id="msgBody">
+		</div>
+		<hr>
+		<div id="typeMsg">
+			<input type="text" id="inputMsg" placeholder="Type a message here">
+			<button id="sendMsg" >Send</button>
+		</div>
+	</div>
+
+	<script>
+		var userId;
+		var linkId;var serachId;
+
+		//get session on load
+		
+		var windowLoad = $(window).on('load', getSession());
+		
+		
+		//user search input function
+		
+		$("#inputSearch").keyup(function(){
+			   $("#friends").hide();
+			   $("#searchResults").show();
+			   var searchInput =  document.getElementById("inputSearch").value;
+			   searchUser(searchInput);
+		});
+		
+		
+		
+		// add button click function - button to get hide after click and adding the selected id to contact list
+		 
+		 $("#addUserButton").click(function(){
+				var user = document.getElementById("searchResults");
+			 	var friends = document.getElementById("friends");
+				var userValue = document.getElementById("friendId").textContent;
+		    	$("#addUserButton").hide();
+		    	addFriend(userValue);
+		 });
+
+		
+		var friendlist = $.when(getSession()).done( function(data){
+			console.log("user-"+data);
+			userId = data;
+			$("#userId").html(userId);
+			getFriendList(userId);
+		});
+
+		
+		setInterval(check, 50000);		
+		//if ($('#friends option:selected').length == 0) { setInterval(5000,alert('nothing selected')); }
+
+		function check(){
+			//alert("hi");
+				if($(".liFriendActive")[0]){
+					
+					var friendValue = $(".liFriendActive a").text();
+					getFriendActivity(friendValue);
+					getMsg(friendValue);
+				}
+				else if($(".liSearchActive")[0]){
+					
+					var friendValue = $("#friendId").text();
+					var friend = checkFriend(friendValue);
+					getFriendActivity(friendValue);
+					if(friend){
+						getMsg(friendValue);
+					}
+				}
+				 /*  else {
+					   alert("nothing selected");
+
+				   } */
+		}
+			function checkFriend(friendValue) {
+				
+					for(var i = 0; i < $('#friends li').length; i++) {
+					  
+						console.log("lenght "+$('#friends li').length);
+						if ($('#friends li a')[i].textContent == friendValue)  {
+					    	 return 1;
+					    }
+					}
+					return 0;
+			}
+		
+		$(document).on('click', ".liFriendNonActive", function(event) {
+			var friends = document.getElementById("friends");
+				   
+				  $(this).toggleClass('liFriendActive').siblings().removeClass('liFriendActive');
+				  $(this).toggleClass('liFriendNonActive').siblings().addClass('liFriendNonActive');
+				  $(this).toggleClass('liFriendActive').addClass('liFriendActive');
+					var friendValue = $(".liFriendActive a").text();
+					console.log("div "+friendValue);
+					getFriendActivity(friendValue);
+					getMsg(friendValue); 
+				$('#typeMsg').show();
+				$('#addUserButton').hide();
+	    	/* */
+		});
+
+		$(document).on('click', ".liSearchNonActive", function(event) {
+			var search = document.getElementById("searchResults");
+				  
+				  $(this).toggleClass('liSearchActive').siblings().removeClass('liSearchActive');
+				  $(this).toggleClass('liSearchNonActive').siblings().addClass('liSearchNonActive');
+				  $(this).toggleClass('liSearchActive').addClass('liSearchActive');
+					var friendValue = $(event.target).text();
+					getFriendActivity(friendValue);
+					getMsg(friendValue);
+					if(checkFriend(friendValue)){
+						alert("1");
+						$('#typeMsg').show();
+						$('#addUserButton').hide();
+					}else{
+						alert("0");
+						$('#msgBody').empty();
+				    	$('#addUserButton').show();
+				    	$('#typeMsg').hide();
+					}
+					
+		});
+
+		
+		//send msg button click function - 1)retrieve link id by ajax call. 2)msg send to user. 3)appended the new msg in display
+		
+		$("#sendMsg").click(function() {
+			
+			var textMsg = document.getElementById("inputMsg").value;
+			var search = document.getElementById("searchResults");
+			var friend = document.getElementById("friendId");
+			var friendValue = friendId.textContent;
+			
+			$.when(getLinkId(friendValue)).done(function(data) {
+				linkId = data;
+				console.log("link" + linkId);
+				sendMsg(friendValue,linkId,textMsg);
+				//$.when(send).done(displayLastSentMsg(linkId)).fail("msg sent fail");
+			});
+	
+		});
+
+		//logout
+		
+		$("#logout").click(function() {
+			logout();
+		});
+		
+		//-----------------------------------------------------------------
+		
+		function getSession() {
+
+			return $.ajax({
+				type : "GET",
+				url : "getSession",
+			});
+		}
+	
+		
+		function logout() {
+			
+			$.ajax({
+				type : "GET",                                                                             //
+				url : "logout",
+				data: "userId=" + userId,
+				success : function(data) {
+					alert(data);
+					window.location = "userLogin.html";
+				},
+	
+				error : function(e) {
+					console.log("operation failed");
+				}
+			});
+		}
+		
+		
+		function hideSearchList(){
+			$("#friends").show();
+			$("#searchResults").hide();
+		}
+		
+		function getFriendList(userId) {
+			
+			$.ajax({
+				type : "GET",
+				url : "getFriendList",
+				data : "userId=" + userId,
+
+				success : function(data) {
+					
+					$('#friends').empty();
+					var list = document.getElementById("friends");
+					for (var i = 0; i < data.length; i++) {
+						
+						//userId is escaped
+						if (data[i].user1 != userId)
+							o = data[i].user1;
+						else
+							o = data[i].user2;
+
+						
+						var li = document.createElement("li");
+						var a = document.createElement("a");
+						var span = document.createElement("span");
+						li.className = "liFriendNonActive";
+						a.setAttribute('href', "#");
+						span.style.color = "red";
+						span.style.float = "right";
+						li.style.float = "left";
+						a.textContent = o;
+						a.id = data[i].linkId;
+			            var count = document.createTextNode(1);
+						console.log(li);
+						span.appendChild(count);
+						li.appendChild(span);
+						li.appendChild(a);
+						list.appendChild(li); 
+						var br = document.createElement("br");
+
+					}
+
+				},
+
+				error : function(e) {
+					console.log("operation failed");
+				}
+			});
+		}
+		
+		function addFriend(friendValue) {
+			
+			userId = document.getElementById("userId").textContent;
+			
+			$.ajax({
+				type : "POST",                                                                                 
+				url : "addFriend",
+				data : "user1=" + userId
+				+ "&user2=" + friendValue,
+				
+				success : function(data) {
+					console.log("friend added");
+					userId = document.getElementById("userId").textContent;
+					getFriendList(userId); 
+			    	$('#typeMsg').show();
+
+						
+				},
+
+				error : function(e) {
+					console.log("operation failed");
+				}
+			});
+		}
+		
+		
+		function getFriendActivity(friendValue) {
+			
+			$.ajax({
+				type : "GET",
+				url : "getFriendActivity",
+				data : "friendValue=" + friendValue,
+				success : function(data) {
+					$("#friendId").text(friendValue);
+					//console.log("friendId"+friendValue);
+					if(data.activity==1){
+						$("#friendActivity").text("Online");
+					}else{
+						$("#friendActivity").text("");
+					}
+					console.log("friend Status got "+friendValue+","+data.activity);
+				},
+
+				error : function(e) {
+					console.log("operation failed");
+				}
+			});
+		
+		}
+		
+		
+		function getLinkId(friendValue) {
+			
+			userId = document.getElementById("userId").textContent;
+
+			return $.ajax({
+				type : "GET",
+				url : "getLinkId",
+				data : "userId=" + userId
+				+ "&friendValue=" + friendValue,
+			}); 
+		
+		}
+		
+		function searchUser(searchInput){
+
+			var ul = document.getElementById("searchResults");
+
+			   $.ajax({
+					type : "GET",
+					url : "getAllRegisteredUser",
+					data: "searchInput=" + searchInput,
+
+					success : function(data) {
+						console.log(data);
+						$('#searchResults').empty();
+						if(document.getElementById("inputSearch").value==""){
+							hideSearchList();
+						}
+						for (var i = 0; i < data.length; i++) {
+							if (data[i].userId == userId)
+								continue;
+							
+							var o = data[i].userId;
+							
+							var li = document.createElement("li");
+							var a = document.createElement("a");
+							li.className = "liSearchNonActive";
+							a.setAttribute('href', "#");
+							li.style.float = "left";
+							a.textContent = o;
+							a.style.color = "black";
+							console.log(li);
+							li.appendChild(a);
+							ul.appendChild(li); 
+							var br = document.createElement("br");
+						}
+					},
+
+					error : function(e) {
+						console.log("operation failed");
+					}
+				});
+		}
+		
+		
+		//-------------------------------msg controller--------------------------------------
+		function sendMsg(friendValue,linkId,textMsg) {
+			
+			userId = document.getElementById("userId").textContent;
+			
+			$.ajax({
+				type : "POST",                                                                    //
+				url : "sendMsg",
+				data : "sender=" + userId
+						+ "&reciever=" + friendValue
+						+ "&linkId=" + linkId
+						+ "&msg=" + textMsg,
+
+				success : function(data) {
+					console.log("msg sent success");	
+					displayLastSentMsg(linkId);
+				},
+
+				error : function(e) {
+					console.log("operation failed");
+				}
+			});
+		}
+		
+		function displayLastSentMsg(linkId) {
+				
+			userId = document.getElementById("userId").textContent;
+	
+				$.ajax({
+					type : "GET",
+					url : "getSentMsg",
+					//data : "userId=" + userId,
+					data : "userId="
+							+ userId
+							//+ "&friendValue="
+							//+ friendValue
+							+ "&linkId="
+							+ linkId,
+	
+					success : function(data) {
+						console.log(data);
+						var br = document.createElement("br");
+						var msg = data.msg;
+						var time = data.dateTime;
+	
+						var post = document
+								.createElement("p");
+						var postNode = document
+								.createTextNode(msg);
+						var span = document
+								.createElement("span");
+						var timeNode = document
+								.createTextNode(time);
+						span.style.fontSize = "10px";
+						span.style.fontColor = "#808080";
+	
+						post.appendChild(postNode);
+						span.appendChild(timeNode);
+						
+						var div = document.createElement("div");
+						div.appendChild(post);
+						div.appendChild(span);
+						
+						div.style.backgroundColor = "#80ccff";
+						div.style.border = "2px solid #e6f5ff";
+						div.style.borderRadius = "12px";
+						div.style.display = "inline-block"
+						var wrapper = document.createElement("div");
+						wrapper.className="wrapper";
+						var msgBody = document.getElementById("msgBody");
+						wrapper.appendChild(div);
+						msgBody.appendChild(wrapper);
+						msgBody.appendChild(br);
+						$('#inputMsg').val("");
+
+					},
+	
+					error : function(e) {
+						console.log("operation failed");
+					}
+			});
+		}
+		
+		function getMsg(friendValue) {
+			
+			userId = document.getElementById("userId").textContent;
+			
+			$.ajax({
+				
+				type : "GET",
+				url : "getFriendMsg",                  
+				data : "userId=" + userId
+				+ "&friendValue=" + friendValue,
+				
+				success : function(data) {
+					console.log(data);
+					
+					$('#msgBody').empty();
+					for (var i = 0; i < data.length; i++) {
+						var sender = data[i].sender;
+						var msg = data[i].msg;
+						var time = data[i].dateTime;
+						
+						var wrapper = document.createElement("div");
+						wrapper.className="wrapper";
+						
+						var post = document
+								.createElement("p");
+						var postNode = document
+								.createTextNode(msg);
+						var span = document
+								.createElement("span");
+						var timeNode = document
+								.createTextNode(time);
+						span.style.fontSize = "10px";
+						span.style.color = "#4d4d4d";
+
+						post.appendChild(postNode);
+						span.appendChild(timeNode);
+
+						var div = document
+								.createElement("div");
+						div.appendChild(post);
+						div.appendChild(span);
+						div.style.backgroundColor = "#80ccff";
+						div.style.border = "2px solid #e6f5ff";
+						div.style.borderRadius = "12px";
+						div.style.display = "inline-block";
+						wrapper.appendChild(div);
+						var br = document
+								.createElement("br");
+
+						var msgBody = document
+								.getElementById("msgBody");
+						
+						if(sender==userId){
+							//alert("user");
+							div.style.float="right";
+							div.style.backgroundColor="#80ccff";
+						}else{
+							//alert("Not user");
+							div.style.backgroundColor = "#DBE4EC";
+							div.style.float="left";
+							
+
+
+						}
+
+						msgBody.appendChild(wrapper);
+						msgBody.appendChild(br);
+						console.log(msg + "," + time);
+
+					}
+
+				},
+
+				error : function(e) {
+					console.log("operation failed");
+				}
+			});
+		}
+	
+		
+		
+		
+	</script>
+</body>
+</html>
