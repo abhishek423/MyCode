@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<link rel="stylesheet" type="text/css" href="main.css" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<title>Export Format</title>
+</head>
+<body>
+	<h2>EXPORT FORMAT</h2>
+	<div>
+		Select Database:
+		<select id="dbDropdown" style="width:100px;">>
+		</select>
+		<button id="dbButton">Submit</button>
+	</div>
+	<hr>
+	
+	<div id="td">
+		<h4 style="width:40%;">Tables in Database:</h4>
+		<select  id="TablesInDatabase" size="10" style="width:200px;">>
+		</select>
+ 	</div>
+ 	<div id="nav">
+	 	<button id="forward"> > </button>
+	 	<button id="backward"> < </button>
+ 	</div>
+ 	<div id="ts">
+	 	<h4 style="witdth:40%;">Tables Selected:</h4>
+		<select id="TablesSelected" size="10" style="width:200px;">>
+	  	</select>
+ 	</div>
+ 	<hr>
+ 	 	<div id="export">
+	 	<h4>Export into:</h4>
+		<select id="exportFormat" style="width:100px;">
+	  	</select>
+	 	<button id="exportBtn">OK</button>
+	 	</div>
+ 	
+</body>
+<script>
+	$(document).ready(function() {
+			$.ajax({
+				type: "GET",
+				url: "ExportFormatOptionGenerate",
+				success: function(data) {
+					var text = data;
+			    	var objText = JSON.parse(text);
+			    	var i;
+			    	for(i=0;i<objText.length;i++){
+			    		var option="<option value="+objText[i]+">"+objText[i]+"</option>";
+		                $(option).appendTo('#exportFormat');
+		                alert(objText[i]);
+			    	}
+				},
+				error: function(e) {
+					alert("failed");
+				}
+	   		});
+		$("#dbDropdown").click(function(data) {
+			$("#dbDropdown").empty();
+			$.ajax({
+				type: "GET",
+				url: "ShowDatabaseList",
+				success: function(data) {
+					//$("#dbDropdown").empty();
+					var text = data;
+			    	var objText = JSON.parse(text);
+			    	//var databaseName = objText[objText.length-1];
+			    	var i;
+			    	for(i=0;i<objText.length;i++){
+			    		var option="<option value="+objText[i]+">"+objText[i]+"</option>";
+		                $(option).appendTo('#dbDropdown');
+			    	}
+				},
+				error: function(e) {
+					alert("failed");
+				}
+			});
+	    });
+		
+		$("#dbButton").click(function(data) {
+			var e = document.getElementById("dbDropdown");
+			databaseName = e.options[e.selectedIndex].text;
+			var file = "file:///C:/Users/AB/Desktop/javaproject2/ExportFormatAssignment/WebContent/config.txt";
+			$.ajax({
+				type: "GET",
+				url: "ShowTableList",
+				data: "databaseName="+databaseName,
+				success: function(data) {
+					 $("#TablesInDatabase").empty();
+					var text = data;
+			    	var objText = JSON.parse(text);
+			    	var database = objText[objText.length-1];
+			    	var i;
+			    	for(i=0;i<objText.length;i++){
+			    		var option="<option value="+objText[i]+">"+objText[i]+"</option>";
+		                $(option).appendTo('#TablesInDatabase');
+			    	}
+				},
+				error: function(e) {
+					alert("failed");
+				}
+			});
+	    });
+		
+		$("#forward").click(function(data) {
+			var e = document.getElementById("TablesInDatabase");
+			var itemSelected = e.options[e.selectedIndex].text;
+			var option="<option value="+itemSelected+">"+itemSelected+"</option>";
+            $(option).appendTo('#TablesSelected');
+            e.remove(e.selectedIndex);
+            
+		});
+		
+		$("#backward").click(function(data) {
+			var e = document.getElementById("TablesSelected");
+			var itemSelected = e.options[e.selectedIndex].text;
+			var option="<option value="+itemSelected+">"+itemSelected+"</option>";
+            $(option).appendTo('#TablesInDatabase');
+            e.remove(e.selectedIndex);
+		});
+		
+		$("#exportBtn").click(function(data) {
+			var d = document.getElementById("dbDropdown");
+			var ef = document.getElementById("exportFormat");
+
+			var databaseName = d.options[d.selectedIndex].text;
+			var exportFormat = ef.options[ef.selectedIndex].text
+			var e = document.getElementById("TablesSelected");
+			//var databaseName = e.options[e.selectedIndex].text;
+			alert(databaseName);
+			alert(exportFormat);
+			 var values = [];
+			   for(var i = 0; i < e.options.length; i++)
+			   {
+			      values.push(e.options[i].value);
+			     // alert(e.options[i].value);
+			   }//alert(values);
+			   
+			$.ajax({
+				type: "GET",
+				url: "GetTableData",
+				data: "values="+values+"&databaseName="+databaseName+"&exportFormat="+exportFormat,
+				success: function(data) {
+					 alert("file export success");
+				},
+				error: function(e) {
+					alert("failed");
+				}
+			});
+		});
+		
+	});
+/*
+$("#dbDropdown").change(function(data) {
+	alert("OK");
+});*/
+</script>
+</html>

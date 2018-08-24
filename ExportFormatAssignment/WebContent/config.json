@@ -1,0 +1,5 @@
+{
+"Html" :{"param":"html","className":"HtmlWriter"},
+"XML" :{"param":"xml","className":"XMLWriter"},
+"Csv" :{"param":"csv","className":"CsvWriter"}
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<title>Insert title here</title>
+</head>
+<body>
+
+</body>
+<script>
+var result;
+//doing the ajax call to a .php file
+var dO = $.ajax({
+          url: "",
+          type: 'post',
+          dataType: 'json',
+          data: {
+              operation: "fetch_name"
+          }
+      });
+      //fetching the result with done
+      $.when(dO).done(function(data) {
+          //alert works here
+          result = "data";
+          alert(result);
+      });
+//alert doesn't work here
+alert(result);
+</script>
+</html>
